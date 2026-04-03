@@ -11,6 +11,8 @@ Documentação oficial do MVP Marketplace.
 
 ## Passos do Projeto
   - Faça um git clone do projeto
+  - Na linha de comando do projeto, faça:
+    git checkout main
   - Na pasta raiz do projeto (o primeiro mkbackend) crie um arquivo e o nomeie como .env
   - Insira o seguinte código nele:
     
