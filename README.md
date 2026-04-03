@@ -10,12 +10,12 @@ Documentação oficial do MVP Marketplace.
   - 03-planejamento.md
 
 ## Execute as Migrações
-python manage.py makemigrations
-python manage.py migrate
+  python manage.py makemigrations
+  python manage.py migrate
 
 ## Executar servidor: 
-python manage.py runserver
+  python manage.py runserver
 
 ## Swagger: 
-http://localhost:8000/api/docs/
+  http://localhost:8000/api/docs/
 
