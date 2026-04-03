@@ -9,13 +9,13 @@ Documentação oficial do MVP Marketplace.
   - 02-arquitetura.md
   - 03-planejamento.md
 
-# Execute as Migrações
+## Execute as Migrações
 python manage.py makemigrations
 python manage.py migrate
 
-# Executar servidor: 
+## Executar servidor: 
 python manage.py runserver
 
-# Swagger: 
+## Swagger: 
 http://localhost:8000/api/docs/
 
