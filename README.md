@@ -15,7 +15,9 @@ Documentação oficial do MVP Marketplace.
   - Insira o seguinte código nele:
     
     DATABASE_URL=postgresql://neondb_owner:npg_tFuYh4qJMZy1@ep-crimson-fire-am1ys3sx-pooler.c-5.us-east-1.aws.neon.tech/Marketplace?sslmode=require&channel_binding=require
+    
     SECRET_KEY=Admin123  (aqui utilize sua senha do github)
+    
     DEBUG=True
     ``
 
