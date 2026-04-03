@@ -14,8 +14,8 @@ Documentação oficial do MVP Marketplace.
   - python manage.py migrate
 
 ## Executar servidor: 
-  python manage.py runserver
+  - python manage.py runserver
 
 ## Swagger: 
-  http://localhost:8000/api/docs/
+  - http://localhost:8000/api/docs/
 
