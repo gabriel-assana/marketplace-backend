@@ -19,7 +19,9 @@ Documentação oficial do MVP Marketplace.
     SECRET_KEY=Admin123  (aqui utilize sua senha do github)
     
     DEBUG=True
+    
     ``
+
 
   - Na raiz do projeto, crie um arquivo e o nomeie como .gitignore
   - Insira o seguinte código nele:    
