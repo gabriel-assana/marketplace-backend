@@ -1,5 +1,15 @@
 from django.db import models
 
+
+class Base(models.Model):
+    criacao = models.DateTimeField(auto_now_add=True)
+    atualizacao = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        abstract = True
+
+
+
 # Create your models here.
 class Categoria(models.Model):
     nome = models.CharField(verbose_name='Nome', max_length=100)
