@@ -20,7 +20,8 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter
 from drf_spectacular.types import OpenApiTypes
 
 
-class CategoriaViewSet(viewsets.ModelViewSet):
+
+class CategoriaViewSet(viewsets.GenericViewSet):
     queryset = Categoria.objects.all()
     serializer_class = CategoriaSerializer
     # permission_classes = [IsAuthenticatedOrReadOnly]
@@ -176,7 +177,7 @@ class CategoriaViewSet(viewsets.ModelViewSet):
 
 
 
-class UsuarioViewSet(viewsets.ModelViewSet):
+class UsuarioViewSet(viewsets.GenericViewSet):
     queryset = Usuario.objects.all()
     serializer_class = UsuarioSerializer
 
@@ -226,8 +227,9 @@ class UsuarioViewSet(viewsets.ModelViewSet):
         nome = dados.get('nome')
         email = dados.get('email')
         senha = dados.get('senha')
+        cpf = dados.get('cpf')
 
-        if all([nome, email, senha]):
+        if all([nome, email, senha, cpf]):
             serializer = self.get_serializer(data=dados)
 
             if serializer.is_valid():
@@ -244,7 +246,7 @@ class UsuarioViewSet(viewsets.ModelViewSet):
         )
 
 
-class ProdutoViewSet(viewsets.ModelViewSet):
+class ProdutoViewSet(viewsets.GenericViewSet):
     queryset = Produto.objects.all()
     serializer_class = ProdutoSerializer
 

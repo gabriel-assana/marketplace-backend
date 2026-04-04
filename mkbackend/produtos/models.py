@@ -5,7 +5,7 @@ from categorias.models import Categoria
 # Create your models here.
 class Produto(models.Model):
     titulo = models.CharField(verbose_name='Titulo', max_length=100)
-    descricao = models.CharField(verbose_name='Descricao', max_length=200)
+    descricao = models.CharField(verbose_name='Descricao', max_length=200, blank=True)
     preco = models.DecimalField(verbose_name='Preço', max_digits=10, decimal_places=2)
     url_imagem = models.CharField(verbose_name='Url_Imagem', max_length=300)
     usuario = models.ForeignKey(
