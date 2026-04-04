@@ -327,14 +327,3 @@ class ProdutoViewSet(viewsets.GenericViewSet):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
