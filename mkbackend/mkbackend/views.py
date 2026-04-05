@@ -60,7 +60,6 @@ class CategoriaViewSet(viewsets.GenericViewSet):
     def buscar_categoria_id(self, request, pk=None):
 
         categoria = get_object_or_404(Categoria, pk=pk)
-        print('categoria encontrada: ',categoria)
 
         if not categoria:
             return Response({
@@ -136,7 +135,9 @@ class CategoriaViewSet(viewsets.GenericViewSet):
                 serializer.save()
 
                 return Response(
-                    serializer.data,
+                    {"Sucesso": "Sucesso",
+                     "detail": f'A categoria {serializer.data['nome']} foi cadastrada com sucesso.',
+                     "data": serializer.data},
                     status=status.HTTP_201_CREATED
                 )
 
@@ -174,6 +175,42 @@ class CategoriaViewSet(viewsets.GenericViewSet):
             serializer.errors, # Retorna o motivo exato da falha na validação
             status=status.HTTP_400_BAD_REQUEST
         )
+
+
+    @action(
+        detail=True,
+        methods=["delete"],
+        url_path="excluir_categoria",
+        url_name="excluir_categoria"
+    )
+    def excluir_categoria(self, request, pk=None):
+
+        # categoria = get_object_or_404(Categoria, pk=pk)
+        categoria = Categoria.objects.filter(pk=pk).first()
+
+        if not categoria:
+            return Response(
+                {"detail": "Categoria não encontrada ou já foi excluída."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        nome_categoria = categoria.nome
+
+        try:
+            categoria.delete()
+        
+            return Response({
+                "detail": f'Categoria {nome_categoria} excluída com sucesso.'},
+                status=status.HTTP_200_OK    
+            )
+        
+        except Exception as e:
+            return Response(
+                {"detail": "Erro na exclusão da categoria",
+                 "error": f"Erro na exclusão: {str(e)}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
 
 
 
