@@ -503,12 +503,64 @@ class ProdutoViewSet(viewsets.GenericViewSet):
         )
 
 
+    @action(
+        detail=True,
+        methods=["put"],
+        url_path="editar-produto",
+        url_name="editar-produto"
+    )
+    def editar_produto(self, request, pk=None):
+
+        instance = self.get_object()
+
+        serializer = self.get_serializer(instance, data=request.data, partial=False)
+
+        if serializer.is_valid():
+            serializer.save()
+
+            return Response(
+                serializer.data,
+                status=status.HTTP_201_CREATED
+            )
+
+        return Response(
+            serializer.errors, # Retorna o motivo exato da falha na validação
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
 
+    @action(
+        detail=True,
+        methods=["delete"],
+        url_path="excluir-produto",
+        url_name="excluir-produto"
+    )
+    def excluir_produto(self, request, pk=None):
 
+        produto = Produto.objects.filter(pk=pk).first()
 
+        if not produto:
+            return Response(
+                {"detail": "Produto não encontrado ou já foi excluído."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        nome_produto = produto.titulo
 
+        try:
+            produto.delete()
 
+            return Response({
+                "detail": f'Produto {nome_produto} excluído com sucesso.'},
+                status=status.HTTP_200_OK    
+            )
+
+        except Exception as e:
+            return Response(
+                {"detail": "Erro na exclusão do produto",
+                 "error": f"Erro na exclusão: {str(e)}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 
 
