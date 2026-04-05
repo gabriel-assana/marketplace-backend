@@ -283,6 +283,110 @@ class UsuarioViewSet(viewsets.GenericViewSet):
         )
 
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='nome', 
+                description='Nome do usuário para busca', 
+                required=True, 
+                type=OpenApiTypes.STR
+            ),
+        ],
+        responses={200: CategoriaSerializer}
+    )
+    @action(
+        detail=False,
+        methods=["get"],
+        url_path="buscar-usuario",
+        url_name="buscar-usuario"
+    )
+    def buscar_usuario(self, request):
+
+        nome_usuario = request.query_params.get('nome', None)
+
+        if nome_usuario is not None:
+            usuarios = Usuario.objects.filter(nome__icontains=nome_usuario)
+
+            serializer = self.get_serializer(usuarios, many=True)
+
+            return Response(
+                serializer.data,
+                status=status.HTTP_200_OK
+            )
+        
+        return Response(
+            {"detail": "O parâmetro 'nome' é obrigatório."},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+
+    @extend_schema(
+        request=UsuarioSerializer,
+        responses={200: UsuarioSerializer}
+    )
+    @action(
+        detail=True,
+        methods=["put"],
+        url_path="editar-usuario",
+        url_name="editar-usuario"
+    )
+    def editar_usuario(self, request, pk=None):
+
+        instance = self.get_object()
+
+        serializer = self.get_serializer(instance, data=request.data, partial=False)
+
+        if serializer.is_valid():
+            serializer.save()
+
+            return Response(
+                serializer.data,
+                status=status.HTTP_201_CREATED
+            )
+
+        return Response(
+            serializer.errors, # Retorna o motivo exato da falha na validação
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+
+    @action(
+        detail=True,
+        methods=["delete"],
+        url_path="excluir-usuario",
+        url_name="excluir-usuario"
+    )
+    def excluir_usuario(self, request, pk=None):
+
+        usuario = Usuario.objects.filter(pk=pk).first()
+
+        if not usuario:
+            return Response(
+                {"detail": "Usuário não encontrado ou já foi excluído."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        nome_usuario = usuario.nome
+
+        try:
+            usuario.delete()
+
+            return Response({
+                "detail": f'Usuário {nome_usuario} excluído com sucesso.'},
+                status=status.HTTP_200_OK    
+            )
+
+        except Exception as e:
+            return Response(
+                {"detail": "Erro na exclusão do usuário",
+                 "error": f"Erro na exclusão: {str(e)}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+
+
+
+
 class ProdutoViewSet(viewsets.GenericViewSet):
     queryset = Produto.objects.all()
     serializer_class = ProdutoSerializer
