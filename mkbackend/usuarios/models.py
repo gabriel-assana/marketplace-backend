@@ -15,4 +15,4 @@ class Usuario(models.Model):
         verbose_name_plural = 'usuarios'
 
     def __str__(self):
-        return '%s / %s' % (self.nome, self.email, self.super_user, self.cpf)
+        return '%s / %s / %s / %s' % (self.nome, self.email, self.super_user, self.cpf)

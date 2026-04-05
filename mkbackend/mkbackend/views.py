@@ -292,7 +292,7 @@ class UsuarioViewSet(viewsets.GenericViewSet):
                 type=OpenApiTypes.STR
             ),
         ],
-        responses={200: CategoriaSerializer}
+        responses={200: UsuarioSerializer}
     )
     @action(
         detail=False,
@@ -463,6 +463,55 @@ class ProdutoViewSet(viewsets.GenericViewSet):
             status=status.HTTP_400_BAD_REQUEST
         )
     
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='titulo', 
+                description='Título do produto para busca', 
+                required=True, 
+                type=OpenApiTypes.STR
+            ),
+        ],
+        responses={200: ProdutoSerializer}
+    )
+    @action(
+        detail=False,
+        methods=["get"],
+        url_path="buscar-produto",
+        url_name="buscar-produto"
+    )
+    def buscar_produto(self, request):
+
+        """Busca o produto somente pelo título."""
+
+        nome_produto = request.query_params.get('titulo', None)
+
+        if nome_produto is not None:
+            produtos = Produto.objects.filter(titulo__icontains=nome_produto)
+
+            serializer = self.get_serializer(produtos, many=True)
+
+            return Response(
+                serializer.data,
+                status=status.HTTP_200_OK
+            )
+        
+        return Response(
+            {"detail": "O parâmetro 'título' é obrigatório."},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+
+
+
+
+
+
+
+
+
+
 
 
 

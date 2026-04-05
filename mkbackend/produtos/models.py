@@ -19,7 +19,7 @@ class Produto(models.Model):
         db_table = u'produto'
         managed= True
         verbose_name = 'produto'
-        verbose_name_plural = 'produto'
+        verbose_name_plural = 'produtos'
 
     def __str__(self):
-        return '%s / %s' % (self.usuario, self.categoria)
+        return '%s / %s / %s / %s / %s / %s' % (self.titulo, self.descricao, self.preco, self.url_imagem, self.usuario, self.categoria)

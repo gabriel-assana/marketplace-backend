@@ -18,7 +18,7 @@ class Categoria(models.Model):
         db_table = u'categoria'
         managed= True
         verbose_name = 'categoria'
-        verbose_name_plural = 'categoria'
+        verbose_name_plural = 'categorias'
 
     def __str__(self):
         return self.nome
