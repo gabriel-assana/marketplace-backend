@@ -180,41 +180,70 @@ class CategoriaViewSet(viewsets.GenericViewSet):
         )
 
 
+    # @action(
+    #     detail=True,
+    #     methods=["delete"],
+    #     url_path="excluir_categoria",
+    #     url_name="excluir_categoria"
+    # )
+    # def excluir_categoria(self, request, pk=None):
+
+    #     categoria = Categoria.objects.filter(pk=pk).first()
+
+    #     if not categoria:
+    #         return Response(
+    #             {"detail": "Categoria não encontrada ou já foi excluída."},
+    #             status=status.HTTP_404_NOT_FOUND
+    #         )
+
+    #     nome_categoria = categoria.nome
+
+    #     try:
+    #         categoria.delete()
+        
+    #         return Response({
+    #             "detail": f'Categoria {nome_categoria} excluída com sucesso.'},
+    #             status=status.HTTP_200_OK    
+    #         )
+        
+    #     except Exception as e:
+    #         return Response(
+    #             {"detail": "Erro na exclusão da categoria",
+    #              "error": f"Erro na exclusão: {str(e)}"},
+    #             status=status.HTTP_400_BAD_REQUEST
+    #         )
+
+    
+    @extend_schema(
+        request=None, # Não exige corpo na requisição
+        responses={200: OpenApiTypes.STR}
+    )
     @action(
         detail=True,
-        methods=["delete"],
-        url_path="excluir_categoria",
-        url_name="excluir_categoria"
+        methods=["put"],
+        url_path="excluir-categoria", # Nome mais semântico para a função
+        url_name="excluir-categoria"
     )
     def excluir_categoria(self, request, pk=None):
+        # 1. Obtém a instância da categoria pelo ID (pk)
+        instance = self.get_object()
 
-        # categoria = get_object_or_404(Categoria, pk=pk)
-        categoria = Categoria.objects.filter(pk=pk).first()
+        estado = 'excluída'
 
-        if not categoria:
-            return Response(
-                {"detail": "Categoria não encontrada ou já foi excluída."},
-                status=status.HTTP_404_NOT_FOUND
-            )
-
-        nome_categoria = categoria.nome
-
-        try:
-            categoria.delete()
+        # 2. Altera apenas o campo status
+        if instance.status == 0:
+            instance.status = 1
+            estado = 'ativada'
+        else:
+            instance.status = 0
         
-            return Response({
-                "detail": f'Categoria {nome_categoria} excluída com sucesso.'},
-                status=status.HTTP_200_OK    
-            )
-        
-        except Exception as e:
-            return Response(
-                {"detail": "Erro na exclusão da categoria",
-                 "error": f"Erro na exclusão: {str(e)}"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        # 3. Salva no banco (o campo 'atualizacao' será atualizado pelo auto_now=True)
+        instance.save()
 
-
+        return Response(
+            {"detail": f"Categoria '{instance.nome}' {estado} com sucesso."},
+            status=status.HTTP_200_OK
+        )
 
 
 class UsuarioViewSet(viewsets.GenericViewSet):
@@ -387,40 +416,70 @@ class UsuarioViewSet(viewsets.GenericViewSet):
         )
 
 
+    # @action(
+    #     detail=True,
+    #     methods=["delete"],
+    #     url_path="excluir-usuario",
+    #     url_name="excluir-usuario"
+    # )
+    # def excluir_usuario(self, request, pk=None):
+
+    #     usuario = Usuario.objects.filter(pk=pk).first()
+
+    #     if not usuario:
+    #         return Response(
+    #             {"detail": "Usuário não encontrado ou já foi excluído."},
+    #             status=status.HTTP_404_NOT_FOUND
+    #         )
+        
+    #     nome_usuario = usuario.nome
+
+    #     try:
+    #         usuario.delete()
+
+    #         return Response({
+    #             "detail": f'Usuário {nome_usuario} excluído com sucesso.'},
+    #             status=status.HTTP_200_OK    
+    #         )
+
+    #     except Exception as e:
+    #         return Response(
+    #             {"detail": "Erro na exclusão do usuário",
+    #              "error": f"Erro na exclusão: {str(e)}"},
+    #             status=status.HTTP_400_BAD_REQUEST
+    #         )
+
+
+    @extend_schema(
+        request=None, # Não exige corpo na requisição
+        responses={200: OpenApiTypes.STR}
+    )
     @action(
         detail=True,
-        methods=["delete"],
-        url_path="excluir-usuario",
+        methods=["put"],
+        url_path="excluir-usuario", # Nome mais semântico para a função
         url_name="excluir-usuario"
     )
     def excluir_usuario(self, request, pk=None):
+        # 1. Obtém a instância da categoria pelo ID (pk)
+        instance = self.get_object()
 
-        usuario = Usuario.objects.filter(pk=pk).first()
+        estado = 'excluído'
 
-        if not usuario:
-            return Response(
-                {"detail": "Usuário não encontrado ou já foi excluído."},
-                status=status.HTTP_404_NOT_FOUND
-            )
+        # 2. Altera apenas o campo status
+        if instance.status == 0:
+            instance.status = 1
+            estado = 'ativado'
+        else:
+            instance.status = 0
         
-        nome_usuario = usuario.nome
+        # 3. Salva no banco (o campo 'atualizacao' será atualizado pelo auto_now=True)
+        instance.save()
 
-        try:
-            usuario.delete()
-
-            return Response({
-                "detail": f'Usuário {nome_usuario} excluído com sucesso.'},
-                status=status.HTTP_200_OK    
-            )
-
-        except Exception as e:
-            return Response(
-                {"detail": "Erro na exclusão do usuário",
-                 "error": f"Erro na exclusão: {str(e)}"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-
+        return Response(
+            {"detail": f"Usuario '{instance.nome}' {estado} com sucesso."},
+            status=status.HTTP_200_OK
+        )
 
 
 
@@ -604,40 +663,70 @@ class ProdutoViewSet(viewsets.GenericViewSet):
         )
 
 
+    # @action(
+    #     detail=True,
+    #     methods=["delete"],
+    #     url_path="excluir-produto",
+    #     url_name="excluir-produto"
+    # )
+    # def excluir_produto(self, request, pk=None):
+
+    #     produto = Produto.objects.filter(pk=pk).first()
+
+    #     if not produto:
+    #         return Response(
+    #             {"detail": "Produto não encontrado ou já foi excluído."},
+    #             status=status.HTTP_404_NOT_FOUND
+    #         )
+        
+    #     nome_produto = produto.titulo
+
+    #     try:
+    #         produto.delete()
+
+    #         return Response({
+    #             "detail": f'Produto {nome_produto} excluído com sucesso.'},
+    #             status=status.HTTP_200_OK    
+    #         )
+
+    #     except Exception as e:
+    #         return Response(
+    #             {"detail": "Erro na exclusão do produto",
+    #              "error": f"Erro na exclusão: {str(e)}"},
+    #             status=status.HTTP_400_BAD_REQUEST
+    #         )
+
+
+    @extend_schema(
+        request=None, # Não exige corpo na requisição
+        responses={200: OpenApiTypes.STR}
+    )
     @action(
         detail=True,
-        methods=["delete"],
-        url_path="excluir-produto",
+        methods=["put"],
+        url_path="excluir-produto", # Nome mais semântico para a função
         url_name="excluir-produto"
     )
-    def excluir_produto(self, request, pk=None):
+    def produto_usuario(self, request, pk=None):
+        # 1. Obtém a instância da categoria pelo ID (pk)
+        instance = self.get_object()
 
-        produto = Produto.objects.filter(pk=pk).first()
+        estado = 'excluído'
 
-        if not produto:
-            return Response(
-                {"detail": "Produto não encontrado ou já foi excluído."},
-                status=status.HTTP_404_NOT_FOUND
-            )
+        # 2. Altera apenas o campo status
+        if instance.status == 0:
+            instance.status = 1
+            estado = 'ativado'
+        else:
+            instance.status = 0
         
-        nome_produto = produto.titulo
+        # 3. Salva no banco (o campo 'atualizacao' será atualizado pelo auto_now=True)
+        instance.save()
 
-        try:
-            produto.delete()
-
-            return Response({
-                "detail": f'Produto {nome_produto} excluído com sucesso.'},
-                status=status.HTTP_200_OK    
-            )
-
-        except Exception as e:
-            return Response(
-                {"detail": "Erro na exclusão do produto",
-                 "error": f"Erro na exclusão: {str(e)}"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-
+        return Response(
+            {"detail": f"Produto '{instance.titulo}' {estado} com sucesso."},
+            status=status.HTTP_200_OK
+        )
 
 
 
