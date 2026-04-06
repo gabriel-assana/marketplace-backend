@@ -6,8 +6,8 @@ from categorias.models import Categoria
 from produtos.models import Produto
 
 from usuarios.serializers import UsuarioSerializer, CadastroUsuarioSerializer
-from categorias.serializers import CategoriaSerializer, EditarCategoriaSerializer, CadastrarCategoriaSerializer
-from produtos.serializers import ProdutoSerializer
+from categorias.serializers import CategoriaSerializer, CadastrarCategoriaSerializer
+from produtos.serializers import ProdutoSerializer, CadastrarProdutoSerializer
 
 from django.http import HttpResponseRedirect, HttpResponse, QueryDict
 from django.shortcuts import get_object_or_404, get_list_or_404
@@ -69,7 +69,10 @@ class CategoriaViewSet(viewsets.GenericViewSet):
         
         serializer = {
             "id": categoria.id,
-            "categoria": categoria.nome
+            "categoria": categoria.nome,
+            "status": categoria.status,
+            "criacao": categoria.criacao,
+            "atualizacao": categoria.atualizacao
         }
         
         return Response(
@@ -125,7 +128,7 @@ class CategoriaViewSet(viewsets.GenericViewSet):
         url_name="cadastrar-categoria"
     )
     def cadastrar_categoria(self, request):
-            
+        
         dados = request.data
 
         if dados:
@@ -154,8 +157,8 @@ class CategoriaViewSet(viewsets.GenericViewSet):
     @action(
         detail=True,
         methods=["put"],
-        url_path="editar-categaria",
-        url_name="editar-categaria"
+        url_path="editar-categoria",
+        url_name="editar-categoria"
     )
     def editar_categoria(self, request, pk=None):
 
@@ -245,6 +248,40 @@ class UsuarioViewSet(viewsets.GenericViewSet):
             "detail": "Não foram encontrados os usuários."},
             status=status.HTTP_404_NOT_FOUND
         )
+
+
+    @action(
+        detail=True,
+        methods=["get"],
+        url_path="buscar-usurioid",
+        url_name="buscar-usurioid"
+    )
+    def buscar_usuarioid(self, request, pk=None):
+
+        usuario = get_object_or_404(Usuario, pk=pk)
+
+        if not usuario:
+            return Response(
+                {"detail": "Usuário não encontrado."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        serializer = {
+            "id": usuario.id,
+            "nome": usuario.nome,
+            "email": usuario.email,
+            "super_user": usuario.super_user,
+            "cpf": usuario.cpf,
+            "status": usuario.status,
+            "criacao": usuario.criacao,
+            "atualizacao": usuario.atualizacao
+        }
+
+        return Response(
+            serializer,
+            status=status.HTTP_200_OK
+        )
+    
 
 
     @extend_schema(
@@ -412,7 +449,10 @@ class ProdutoViewSet(viewsets.GenericViewSet):
                     "categoria_id": item.categoria.id,
                     "categoria": item.categoria.nome,
                     "usuario_id": item.usuario.id,
-                    "anunciante": item.usuario.nome
+                    "usuario": item.usuario.nome,
+                    "status": item.status,
+                    "criacao": item.criacao,
+                    "atualizacao": item.atualizacao,
                 })
             
             return Response(
@@ -425,10 +465,45 @@ class ProdutoViewSet(viewsets.GenericViewSet):
             status=status.HTTP_404_NOT_FOUND
         )
     
+    @action(
+        detail=True,
+        methods=["get"],
+        url_path="buscar-produtoid",
+        url_name="buscar-produtoid"
+    )
+    def buscar_produtoid(self, request, pk=None):
+
+        produto = get_object_or_404(Produto, pk=pk)
+
+        if not produto:
+            return Response(
+                {"detail": "Produto não encontrado."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        serializer = {
+            "titulo": produto.titulo,
+            "descricao": produto.descricao,
+            "preco": produto.preco,
+            "url_imagem": produto.url_imagem,            
+            "categoria_id": produto.categoria.id,
+            "categoria": produto.categoria.nome,
+            "usuario_id": produto.usuario.id,
+            "usuario": produto.usuario.nome,
+            "status": produto.status,
+            "criacao": produto.criacao,
+            "atualizacao": produto.atualizacao,
+        }
+
+        return Response(
+            serializer,
+            status=status.HTTP_200_OK
+        )
+
 
     @extend_schema(
-        request=ProdutoSerializer,
-        responses={201: ProdutoSerializer}
+        request=CadastrarProdutoSerializer,
+        responses={201: CadastrarProdutoSerializer}
     )
     @action(
         detail=False,
