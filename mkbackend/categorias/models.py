@@ -3,7 +3,8 @@ from django.db import models
 
 class Base(models.Model):
     criacao = models.DateTimeField(auto_now_add=True)
-    atualizacao = models.DateTimeField(auto_now_add=True)
+    atualizacao = models.DateTimeField(auto_now=True)
+    status = models.SmallIntegerField(default=1)
 
     class Meta:
         abstract = True
@@ -11,7 +12,7 @@ class Base(models.Model):
 
 
 # Create your models here.
-class Categoria(models.Model):
+class Categoria(Base):
     nome = models.CharField(verbose_name='Nome', max_length=100)
 
     class Meta:

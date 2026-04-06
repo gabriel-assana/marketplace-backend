@@ -1,7 +1,15 @@
 from django.db import models
 
+class Base(models.Model):
+    criacao = models.DateTimeField(auto_now_add=True)
+    atualizacao = models.DateTimeField(auto_now=True)
+    status = models.SmallIntegerField(default=1)
+
+    class Meta:
+        abstract = True
+
 # Create your models here.
-class Usuario(models.Model):
+class Usuario(Base):
     nome = models.CharField(verbose_name='Nome', max_length=100)
     email = models.EmailField(verbose_name='Email', max_length=100, unique=True)
     senha = models.CharField(max_length=255)

@@ -6,7 +6,7 @@ from categorias.models import Categoria
 from produtos.models import Produto
 
 from usuarios.serializers import UsuarioSerializer, CadastroUsuarioSerializer
-from categorias.serializers import CategoriaSerializer, EditarCategoriaSerializer
+from categorias.serializers import CategoriaSerializer, EditarCategoriaSerializer, CadastrarCategoriaSerializer
 from produtos.serializers import ProdutoSerializer
 
 from django.http import HttpResponseRedirect, HttpResponse, QueryDict
@@ -115,8 +115,8 @@ class CategoriaViewSet(viewsets.GenericViewSet):
 
     
     @extend_schema(
-        request=CategoriaSerializer,
-        responses={201: CategoriaSerializer}
+        request=CadastrarCategoriaSerializer,
+        responses={201: CadastrarCategoriaSerializer}
     )
     @action(
         detail=False,
