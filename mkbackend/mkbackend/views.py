@@ -36,14 +36,18 @@ class CategoriaViewSet(viewsets.GenericViewSet):
 
         if self.queryset:
 
+            total_categorias = self.queryset.count()
+
             categorias = []
             for item in self.queryset:
                 categorias.append({
                     "id": item.id,
                     "categoria": item.nome
                 })
-            return Response(
-                categorias,
+
+            return Response({
+                "total": total_categorias,
+                "categorias": categorias},
                 status=status.HTTP_200_OK)
 
         return Response({
@@ -246,6 +250,7 @@ class CategoriaViewSet(viewsets.GenericViewSet):
         )
 
 
+
 class UsuarioViewSet(viewsets.GenericViewSet):
     queryset = Usuario.objects.all()
     serializer_class = UsuarioSerializer
@@ -260,6 +265,8 @@ class UsuarioViewSet(viewsets.GenericViewSet):
 
         if self.queryset:
 
+            total_usuario = self.queryset.count()
+
             usuarios = []
             for item in self.queryset:
                 usuarios.append({
@@ -268,8 +275,10 @@ class UsuarioViewSet(viewsets.GenericViewSet):
                     "email": item.email,
                     "super_user": item.super_user
                 })
-            return Response(
-                usuarios,
+
+            return Response({
+                "total": total_usuario,
+                "usuarios": usuarios},
                 status=status.HTTP_200_OK
             )
 
@@ -495,7 +504,11 @@ class ProdutoViewSet(viewsets.GenericViewSet):
     )
     def listar_produtos(self, request):
 
+        """No frontend, exibir somente os produtos ativos com status 1."""
+
         if self.queryset:
+
+            total_produtos= self.queryset.count()
 
             produtos = []
             for item in self.queryset:
@@ -514,8 +527,9 @@ class ProdutoViewSet(viewsets.GenericViewSet):
                     "atualizacao": item.atualizacao,
                 })
             
-            return Response(
-                produtos,
+            return Response({
+                "total": total_produtos,
+                "produtos": produtos},
                 status=status.HTTP_200_OK
             )
         
@@ -523,6 +537,7 @@ class ProdutoViewSet(viewsets.GenericViewSet):
             "detail": "Não foram encontrados produtos."},
             status=status.HTTP_404_NOT_FOUND
         )
+    
     
     @action(
         detail=True,
