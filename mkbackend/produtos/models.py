@@ -2,8 +2,17 @@ from django.db import models
 from usuarios.models import Usuario
 from categorias.models import Categoria
 
+class Base(models.Model):
+    criacao = models.DateTimeField(auto_now_add=True)
+    atualizacao = models.DateTimeField(auto_now=True)
+    status = models.SmallIntegerField(default=1)
+
+    class Meta:
+        abstract = True
+
+
 # Create your models here.
-class Produto(models.Model):
+class Produto(Base):
     titulo = models.CharField(verbose_name='Titulo', max_length=100)
     descricao = models.CharField(verbose_name='Descricao', max_length=200, blank=True)
     preco = models.DecimalField(verbose_name='Preço', max_digits=10, decimal_places=2)
@@ -19,7 +28,7 @@ class Produto(models.Model):
         db_table = u'produto'
         managed= True
         verbose_name = 'produto'
-        verbose_name_plural = 'produto'
+        verbose_name_plural = 'produtos'
 
     def __str__(self):
-        return '%s / %s' % (self.usuario, self.categoria)
+        return '%s / %s / %s / %s / %s / %s' % (self.titulo, self.descricao, self.preco, self.url_imagem, self.usuario, self.categoria)
