@@ -517,7 +517,7 @@ class ProdutoViewSet(viewsets.GenericViewSet):
                     "titulo": item.titulo,
                     "descricao": item.descricao,
                     "preço": item.preco,
-                    "urlImagem": item.url_imagem,
+                    "url_imagem": item.url_imagem,
                     "categoria_id": item.categoria.id,
                     "categoria": item.categoria.nome,
                     "usuario_id": item.usuario.id,
