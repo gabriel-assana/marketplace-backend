@@ -45,3 +45,13 @@ Documentação oficial do MVP Marketplace.
 ## Swagger: 
   - http://localhost:8000/api/docs/
 
+-------------------------------------------------------------------------------------------------------------------
+
+## Api's que só podem ser utilizados por usuários administradores:
+desativar_categoria
+cadastrar-categoria
+editar-categoria
+excluir-categoria
+listar-usuarios
+buscar-usuario
+
