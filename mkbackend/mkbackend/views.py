@@ -1,4 +1,4 @@
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 
 from rest_framework import viewsets, status, filters
 from usuarios.models import Usuario
@@ -25,6 +25,30 @@ class CategoriaViewSet(viewsets.GenericViewSet):
     queryset = Categoria.objects.all()
     serializer_class = CategoriaSerializer
     # permission_classes = [IsAuthenticatedOrReadOnly]
+
+    @action(
+        detail=True,
+        methods=["put"],
+        url_path="desativar_categoria",
+        permission_classes=[IsAuthenticated]
+    )
+    def desativar_categoria(self, request, pk=None):
+        instance = self.get_object()
+
+        if not request.user.super_user:
+            return Response(
+                {"error": "Apenas administradores podem desativar categorias."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        instance.status = 0
+        instance.save()
+
+        return Response(
+            {"detail": f"Categoria '{instance.nome}' desativada por {request.user.nome}."},
+            status=status.HTTP_200_OK
+        )
+
 
     @action(
         detail=False,
