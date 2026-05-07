@@ -8,3 +8,9 @@ class ProdutoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Produto
         fields = '__all__'
+
+class CadastrarProdutoSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Produto
+        fields = ["titulo","descricao","preco","url_imagem","usuario", "categoria"]

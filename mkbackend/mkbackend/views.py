@@ -1,4 +1,4 @@
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 
 from rest_framework import viewsets, status, filters
 from usuarios.models import Usuario
@@ -6,8 +6,8 @@ from categorias.models import Categoria
 from produtos.models import Produto
 
 from usuarios.serializers import UsuarioSerializer, CadastroUsuarioSerializer
-from categorias.serializers import CategoriaSerializer, EditarCategoriaSerializer
-from produtos.serializers import ProdutoSerializer
+from categorias.serializers import CategoriaSerializer, CadastrarCategoriaSerializer
+from produtos.serializers import ProdutoSerializer, CadastrarProdutoSerializer
 
 from django.http import HttpResponseRedirect, HttpResponse, QueryDict
 from django.shortcuts import get_object_or_404, get_list_or_404
@@ -20,10 +20,35 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter
 from drf_spectacular.types import OpenApiTypes
 
 
-class CategoriaViewSet(viewsets.ModelViewSet):
+
+class CategoriaViewSet(viewsets.GenericViewSet):
     queryset = Categoria.objects.all()
     serializer_class = CategoriaSerializer
     # permission_classes = [IsAuthenticatedOrReadOnly]
+
+    @action(
+        detail=True,
+        methods=["put"],
+        url_path="desativar_categoria",
+        permission_classes=[IsAuthenticated]
+    )
+    def desativar_categoria(self, request, pk=None):
+        instance = self.get_object()
+
+        if not request.user.super_user:
+            return Response(
+                {"error": "Apenas administradores podem desativar categorias."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        instance.status = 0
+        instance.save()
+
+        return Response(
+            {"detail": f"Categoria '{instance.nome}' desativada por {request.user.nome}."},
+            status=status.HTTP_200_OK
+        )
+
 
     @action(
         detail=False,
@@ -35,14 +60,18 @@ class CategoriaViewSet(viewsets.ModelViewSet):
 
         if self.queryset:
 
+            total_categorias = self.queryset.count()
+
             categorias = []
             for item in self.queryset:
                 categorias.append({
                     "id": item.id,
                     "categoria": item.nome
                 })
-            return Response(
-                categorias,
+
+            return Response({
+                "total": total_categorias,
+                "categorias": categorias},
                 status=status.HTTP_200_OK)
 
         return Response({
@@ -59,7 +88,6 @@ class CategoriaViewSet(viewsets.ModelViewSet):
     def buscar_categoria_id(self, request, pk=None):
 
         categoria = get_object_or_404(Categoria, pk=pk)
-        print('categoria encontrada: ',categoria)
 
         if not categoria:
             return Response({
@@ -69,7 +97,10 @@ class CategoriaViewSet(viewsets.ModelViewSet):
         
         serializer = {
             "id": categoria.id,
-            "categoria": categoria.nome
+            "categoria": categoria.nome,
+            "status": categoria.status,
+            "criacao": categoria.criacao,
+            "atualizacao": categoria.atualizacao
         }
         
         return Response(
@@ -115,8 +146,8 @@ class CategoriaViewSet(viewsets.ModelViewSet):
 
     
     @extend_schema(
-        request=CategoriaSerializer,
-        responses={201: CategoriaSerializer}
+        request=CadastrarCategoriaSerializer,
+        responses={201: CadastrarCategoriaSerializer}
     )
     @action(
         detail=False,
@@ -125,7 +156,7 @@ class CategoriaViewSet(viewsets.ModelViewSet):
         url_name="cadastrar-categoria"
     )
     def cadastrar_categoria(self, request):
-            
+        
         dados = request.data
 
         if dados:
@@ -135,7 +166,9 @@ class CategoriaViewSet(viewsets.ModelViewSet):
                 serializer.save()
 
                 return Response(
-                    serializer.data,
+                    {"Sucesso": "Sucesso",
+                     "detail": f'A categoria {serializer.data['nome']} foi cadastrada com sucesso.',
+                     "data": serializer.data},
                     status=status.HTTP_201_CREATED
                 )
 
@@ -152,8 +185,8 @@ class CategoriaViewSet(viewsets.ModelViewSet):
     @action(
         detail=True,
         methods=["put"],
-        url_path="editar-categaria",
-        url_name="editar-categaria"
+        url_path="editar-categoria",
+        url_name="editar-categoria"
     )
     def editar_categoria(self, request, pk=None):
 
@@ -175,8 +208,74 @@ class CategoriaViewSet(viewsets.ModelViewSet):
         )
 
 
+    # @action(
+    #     detail=True,
+    #     methods=["delete"],
+    #     url_path="excluir_categoria",
+    #     url_name="excluir_categoria"
+    # )
+    # def excluir_categoria(self, request, pk=None):
 
-class UsuarioViewSet(viewsets.ModelViewSet):
+    #     categoria = Categoria.objects.filter(pk=pk).first()
+
+    #     if not categoria:
+    #         return Response(
+    #             {"detail": "Categoria não encontrada ou já foi excluída."},
+    #             status=status.HTTP_404_NOT_FOUND
+    #         )
+
+    #     nome_categoria = categoria.nome
+
+    #     try:
+    #         categoria.delete()
+        
+    #         return Response({
+    #             "detail": f'Categoria {nome_categoria} excluída com sucesso.'},
+    #             status=status.HTTP_200_OK    
+    #         )
+        
+    #     except Exception as e:
+    #         return Response(
+    #             {"detail": "Erro na exclusão da categoria",
+    #              "error": f"Erro na exclusão: {str(e)}"},
+    #             status=status.HTTP_400_BAD_REQUEST
+    #         )
+
+    
+    @extend_schema(
+        request=None, # Não exige corpo na requisição
+        responses={200: OpenApiTypes.STR}
+    )
+    @action(
+        detail=True,
+        methods=["put"],
+        url_path="excluir-categoria", # Nome mais semântico para a função
+        url_name="excluir-categoria"
+    )
+    def excluir_categoria(self, request, pk=None):
+        # 1. Obtém a instância da categoria pelo ID (pk)
+        instance = self.get_object()
+
+        estado = 'excluída'
+
+        # 2. Altera apenas o campo status
+        if instance.status == 0:
+            instance.status = 1
+            estado = 'ativada'
+        else:
+            instance.status = 0
+        
+        # 3. Salva no banco (o campo 'atualizacao' será atualizado pelo auto_now=True)
+        instance.save()
+
+        return Response(
+            {"detail": f"Categoria '{instance.nome}' {estado} com sucesso."},
+            status=status.HTTP_200_OK
+        )
+
+
+
+class UsuarioViewSet(viewsets.GenericViewSet):
     queryset = Usuario.objects.all()
     serializer_class = UsuarioSerializer
 
@@ -190,6 +289,8 @@ class UsuarioViewSet(viewsets.ModelViewSet):
 
         if self.queryset:
 
+            total_usuario = self.queryset.count()
+
             usuarios = []
             for item in self.queryset:
                 usuarios.append({
@@ -198,8 +299,10 @@ class UsuarioViewSet(viewsets.ModelViewSet):
                     "email": item.email,
                     "super_user": item.super_user
                 })
-            return Response(
-                usuarios,
+
+            return Response({
+                "total": total_usuario,
+                "usuarios": usuarios},
                 status=status.HTTP_200_OK
             )
 
@@ -207,6 +310,40 @@ class UsuarioViewSet(viewsets.ModelViewSet):
             "detail": "Não foram encontrados os usuários."},
             status=status.HTTP_404_NOT_FOUND
         )
+
+
+    @action(
+        detail=True,
+        methods=["get"],
+        url_path="buscar-usurioid",
+        url_name="buscar-usurioid"
+    )
+    def buscar_usuarioid(self, request, pk=None):
+
+        usuario = get_object_or_404(Usuario, pk=pk)
+
+        if not usuario:
+            return Response(
+                {"detail": "Usuário não encontrado."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        serializer = {
+            "id": usuario.id,
+            "nome": usuario.nome,
+            "email": usuario.email,
+            "super_user": usuario.super_user,
+            "cpf": usuario.cpf,
+            "status": usuario.status,
+            "criacao": usuario.criacao,
+            "atualizacao": usuario.atualizacao
+        }
+
+        return Response(
+            serializer,
+            status=status.HTTP_200_OK
+        )
+    
 
 
     @extend_schema(
@@ -226,8 +363,9 @@ class UsuarioViewSet(viewsets.ModelViewSet):
         nome = dados.get('nome')
         email = dados.get('email')
         senha = dados.get('senha')
+        cpf = dados.get('cpf')
 
-        if all([nome, email, senha]):
+        if all([nome, email, senha, cpf]):
             serializer = self.get_serializer(data=dados)
 
             if serializer.is_valid():
@@ -244,7 +382,141 @@ class UsuarioViewSet(viewsets.ModelViewSet):
         )
 
 
-class ProdutoViewSet(viewsets.ModelViewSet):
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='nome', 
+                description='Nome do usuário para busca', 
+                required=True, 
+                type=OpenApiTypes.STR
+            ),
+        ],
+        responses={200: UsuarioSerializer}
+    )
+    @action(
+        detail=False,
+        methods=["get"],
+        url_path="buscar-usuario",
+        url_name="buscar-usuario"
+    )
+    def buscar_usuario(self, request):
+
+        nome_usuario = request.query_params.get('nome', None)
+
+        if nome_usuario is not None:
+            usuarios = Usuario.objects.filter(nome__icontains=nome_usuario)
+
+            serializer = self.get_serializer(usuarios, many=True)
+
+            return Response(
+                serializer.data,
+                status=status.HTTP_200_OK
+            )
+        
+        return Response(
+            {"detail": "O parâmetro 'nome' é obrigatório."},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+
+    @extend_schema(
+        request=UsuarioSerializer,
+        responses={200: UsuarioSerializer}
+    )
+    @action(
+        detail=True,
+        methods=["put"],
+        url_path="editar-usuario",
+        url_name="editar-usuario"
+    )
+    def editar_usuario(self, request, pk=None):
+
+        instance = self.get_object()
+
+        serializer = self.get_serializer(instance, data=request.data, partial=False)
+
+        if serializer.is_valid():
+            serializer.save()
+
+            return Response(
+                serializer.data,
+                status=status.HTTP_201_CREATED
+            )
+
+        return Response(
+            serializer.errors, # Retorna o motivo exato da falha na validação
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+
+    # @action(
+    #     detail=True,
+    #     methods=["delete"],
+    #     url_path="excluir-usuario",
+    #     url_name="excluir-usuario"
+    # )
+    # def excluir_usuario(self, request, pk=None):
+
+    #     usuario = Usuario.objects.filter(pk=pk).first()
+
+    #     if not usuario:
+    #         return Response(
+    #             {"detail": "Usuário não encontrado ou já foi excluído."},
+    #             status=status.HTTP_404_NOT_FOUND
+    #         )
+        
+    #     nome_usuario = usuario.nome
+
+    #     try:
+    #         usuario.delete()
+
+    #         return Response({
+    #             "detail": f'Usuário {nome_usuario} excluído com sucesso.'},
+    #             status=status.HTTP_200_OK    
+    #         )
+
+    #     except Exception as e:
+    #         return Response(
+    #             {"detail": "Erro na exclusão do usuário",
+    #              "error": f"Erro na exclusão: {str(e)}"},
+    #             status=status.HTTP_400_BAD_REQUEST
+    #         )
+
+
+    @extend_schema(
+        request=None, # Não exige corpo na requisição
+        responses={200: OpenApiTypes.STR}
+    )
+    @action(
+        detail=True,
+        methods=["put"],
+        url_path="excluir-usuario", # Nome mais semântico para a função
+        url_name="excluir-usuario"
+    )
+    def excluir_usuario(self, request, pk=None):
+        # 1. Obtém a instância da categoria pelo ID (pk)
+        instance = self.get_object()
+
+        estado = 'excluído'
+
+        # 2. Altera apenas o campo status
+        if instance.status == 0:
+            instance.status = 1
+            estado = 'ativado'
+        else:
+            instance.status = 0
+        
+        # 3. Salva no banco (o campo 'atualizacao' será atualizado pelo auto_now=True)
+        instance.save()
+
+        return Response(
+            {"detail": f"Usuario '{instance.nome}' {estado} com sucesso."},
+            status=status.HTTP_200_OK
+        )
+
+
+
+class ProdutoViewSet(viewsets.GenericViewSet):
     queryset = Produto.objects.all()
     serializer_class = ProdutoSerializer
 
@@ -256,7 +528,11 @@ class ProdutoViewSet(viewsets.ModelViewSet):
     )
     def listar_produtos(self, request):
 
+        """No frontend, exibir somente os produtos ativos com status 1."""
+
         if self.queryset:
+
+            total_produtos= self.queryset.count()
 
             produtos = []
             for item in self.queryset:
@@ -265,15 +541,19 @@ class ProdutoViewSet(viewsets.ModelViewSet):
                     "titulo": item.titulo,
                     "descricao": item.descricao,
                     "preço": item.preco,
-                    "urlImagem": item.url_imagem,
+                    "url_imagem": item.url_imagem,
                     "categoria_id": item.categoria.id,
                     "categoria": item.categoria.nome,
                     "usuario_id": item.usuario.id,
-                    "anunciante": item.usuario.nome
+                    "usuario": item.usuario.nome,
+                    "status": item.status,
+                    "criacao": item.criacao,
+                    "atualizacao": item.atualizacao,
                 })
             
-            return Response(
-                produtos,
+            return Response({
+                "total": total_produtos,
+                "produtos": produtos},
                 status=status.HTTP_200_OK
             )
         
@@ -282,10 +562,46 @@ class ProdutoViewSet(viewsets.ModelViewSet):
             status=status.HTTP_404_NOT_FOUND
         )
     
+    
+    @action(
+        detail=True,
+        methods=["get"],
+        url_path="buscar-produtoid",
+        url_name="buscar-produtoid"
+    )
+    def buscar_produtoid(self, request, pk=None):
+
+        produto = get_object_or_404(Produto, pk=pk)
+
+        if not produto:
+            return Response(
+                {"detail": "Produto não encontrado."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        serializer = {
+            "titulo": produto.titulo,
+            "descricao": produto.descricao,
+            "preco": produto.preco,
+            "url_imagem": produto.url_imagem,            
+            "categoria_id": produto.categoria.id,
+            "categoria": produto.categoria.nome,
+            "usuario_id": produto.usuario.id,
+            "usuario": produto.usuario.nome,
+            "status": produto.status,
+            "criacao": produto.criacao,
+            "atualizacao": produto.atualizacao,
+        }
+
+        return Response(
+            serializer,
+            status=status.HTTP_200_OK
+        )
+
 
     @extend_schema(
-        request=ProdutoSerializer,
-        responses={201: ProdutoSerializer}
+        request=CadastrarProdutoSerializer,
+        responses={201: CadastrarProdutoSerializer}
     )
     @action(
         detail=False,
@@ -321,15 +637,135 @@ class ProdutoViewSet(viewsets.ModelViewSet):
         )
     
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='titulo', 
+                description='Título do produto para busca', 
+                required=True, 
+                type=OpenApiTypes.STR
+            ),
+        ],
+        responses={200: ProdutoSerializer}
+    )
+    @action(
+        detail=False,
+        methods=["get"],
+        url_path="buscar-produto",
+        url_name="buscar-produto"
+    )
+    def buscar_produto(self, request):
+
+        """Busca o produto somente pelo título."""
+
+        nome_produto = request.query_params.get('titulo', None)
+
+        if nome_produto is not None:
+            produtos = Produto.objects.filter(titulo__icontains=nome_produto)
+
+            serializer = self.get_serializer(produtos, many=True)
+
+            return Response(
+                serializer.data,
+                status=status.HTTP_200_OK
+            )
+        
+        return Response(
+            {"detail": "O parâmetro 'título' é obrigatório."},
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
 
+    @action(
+        detail=True,
+        methods=["put"],
+        url_path="editar-produto",
+        url_name="editar-produto"
+    )
+    def editar_produto(self, request, pk=None):
+
+        instance = self.get_object()
+
+        serializer = self.get_serializer(instance, data=request.data, partial=False)
+
+        if serializer.is_valid():
+            serializer.save()
+
+            return Response(
+                serializer.data,
+                status=status.HTTP_201_CREATED
+            )
+
+        return Response(
+            serializer.errors, # Retorna o motivo exato da falha na validação
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
 
+    # @action(
+    #     detail=True,
+    #     methods=["delete"],
+    #     url_path="excluir-produto",
+    #     url_name="excluir-produto"
+    # )
+    # def excluir_produto(self, request, pk=None):
+
+    #     produto = Produto.objects.filter(pk=pk).first()
+
+    #     if not produto:
+    #         return Response(
+    #             {"detail": "Produto não encontrado ou já foi excluído."},
+    #             status=status.HTTP_404_NOT_FOUND
+    #         )
+        
+    #     nome_produto = produto.titulo
+
+    #     try:
+    #         produto.delete()
+
+    #         return Response({
+    #             "detail": f'Produto {nome_produto} excluído com sucesso.'},
+    #             status=status.HTTP_200_OK    
+    #         )
+
+    #     except Exception as e:
+    #         return Response(
+    #             {"detail": "Erro na exclusão do produto",
+    #              "error": f"Erro na exclusão: {str(e)}"},
+    #             status=status.HTTP_400_BAD_REQUEST
+    #         )
 
 
+    @extend_schema(
+        request=None, # Não exige corpo na requisição
+        responses={200: OpenApiTypes.STR}
+    )
+    @action(
+        detail=True,
+        methods=["put"],
+        url_path="excluir-produto", # Nome mais semântico para a função
+        url_name="excluir-produto"
+    )
+    def produto_usuario(self, request, pk=None):
+        # 1. Obtém a instância da categoria pelo ID (pk)
+        instance = self.get_object()
 
+        estado = 'excluído'
 
+        # 2. Altera apenas o campo status
+        if instance.status == 0:
+            instance.status = 1
+            estado = 'ativado'
+        else:
+            instance.status = 0
+        
+        # 3. Salva no banco (o campo 'atualizacao' será atualizado pelo auto_now=True)
+        instance.save()
 
+        return Response(
+            {"detail": f"Produto '{instance.titulo}' {estado} com sucesso."},
+            status=status.HTTP_200_OK
+        )
 
 
 

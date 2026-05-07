@@ -5,11 +5,17 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from categorias.models import Categoria
 
 class CategoriaSerializer(serializers.ModelSerializer):
-    owner = serializers.ReadOnlyField(source='owner.username')
+    # owner = serializers.ReadOnlyField(source='owner.username')
     
     class Meta:
         model = Categoria
         fields = '__all__'
+
+class CadastrarCategoriaSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Categoria
+        fields = ['nome']
 
 class EditarCategoriaSerializer(serializers.ModelSerializer):
     # owner = serializers.ReadOnlyField(source='owner.username')
