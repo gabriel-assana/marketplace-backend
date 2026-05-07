@@ -13,3 +13,8 @@ class CadastroUsuarioSerializer(serializers.ModelSerializer):
     class Meta:
         model = Usuario
         fields = ["nome", "cpf", "email", "senha"]
+
+class EditarSenhaUsuarioSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Usuario
+        fields = ["senha"]
