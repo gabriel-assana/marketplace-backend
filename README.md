@@ -48,10 +48,10 @@ Documentação oficial do MVP Marketplace.
 -------------------------------------------------------------------------------------------------------------------
 
 ## Api's que só podem ser utilizados por usuários administradores:
-desativar_categoria
-cadastrar-categoria
-editar-categoria
-excluir-categoria
-listar-usuarios
-buscar-usuario
+  - desativar_categoria
+  - cadastrar-categoria
+  - editar-categoria
+  - excluir-categoria
+  - listar-usuarios
+  - buscar-usuario
 
