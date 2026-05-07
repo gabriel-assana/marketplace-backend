@@ -5,7 +5,7 @@ from usuarios.models import Usuario
 from categorias.models import Categoria
 from produtos.models import Produto
 
-from usuarios.serializers import UsuarioSerializer, CadastroUsuarioSerializer
+from usuarios.serializers import UsuarioSerializer, CadastroUsuarioSerializer, EditarSenhaUsuarioSerializer
 from categorias.serializers import CategoriaSerializer, CadastrarCategoriaSerializer
 from produtos.serializers import ProdutoSerializer, CadastrarProdutoSerializer
 
@@ -33,6 +33,9 @@ class CategoriaViewSet(viewsets.GenericViewSet):
         permission_classes=[IsAuthenticated]
     )
     def desativar_categoria(self, request, pk=None):
+
+        """*** Somente super usuário. ***"""
+
         instance = self.get_object()
 
         if not request.user.super_user:
@@ -153,9 +156,18 @@ class CategoriaViewSet(viewsets.GenericViewSet):
         detail=False,
         methods=["post"],
         url_path="cadastrar-categoria",
-        url_name="cadastrar-categoria"
+        url_name="cadastrar-categoria",
+        permission_classes=[IsAuthenticated]
     )
     def cadastrar_categoria(self, request):
+
+        """*** Somente super usuário. ***"""
+
+        if not request.user.super_user:
+            return Response(
+                {"error": "Apenas administradores podem cadastrar categorias."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         
         dados = request.data
 
@@ -186,11 +198,20 @@ class CategoriaViewSet(viewsets.GenericViewSet):
         detail=True,
         methods=["put"],
         url_path="editar-categoria",
-        url_name="editar-categoria"
+        url_name="editar-categoria",
+        permission_classes=[IsAuthenticated]
     )
     def editar_categoria(self, request, pk=None):
 
+        """*** Somente super usuário. ***"""
+
         instance = self.get_object()
+
+        if not request.user.super_user:
+            return Response(
+                {"error": "Apenas administradores podem editar categorias."},
+                status=status.HTTP_403_FORBIDDEN
+            )
 
         serializer = self.get_serializer(instance, data=request.data, partial=False)
 
@@ -250,11 +271,20 @@ class CategoriaViewSet(viewsets.GenericViewSet):
         detail=True,
         methods=["put"],
         url_path="excluir-categoria", # Nome mais semântico para a função
-        url_name="excluir-categoria"
+        url_name="excluir-categoria",
+        permission_classes=[IsAuthenticated]
     )
     def excluir_categoria(self, request, pk=None):
+        """*** Somente super usuário. ***"""
+
         # 1. Obtém a instância da categoria pelo ID (pk)
         instance = self.get_object()
+
+        if not request.user.super_user:
+            return Response(
+                {"error": "Apenas administradores podem excluir categorias."},
+                status=status.HTTP_403_FORBIDDEN
+            )
 
         estado = 'excluída'
 
@@ -283,9 +313,18 @@ class UsuarioViewSet(viewsets.GenericViewSet):
         detail=False,
         methods=["get"],
         url_path="listar-usuarios",
-        url_name="listar-usuarios"
+        url_name="listar-usuarios",
+        permission_classes=[IsAuthenticated]
     )
     def listar_usuarios(self, request):
+
+        """*** Somente super usuário. ***"""
+
+        if not request.user.super_user:
+            return Response(
+                {"error": "Apenas administradores podem desativar categorias."},
+                status=status.HTTP_403_FORBIDDEN
+            )
 
         if self.queryset:
 
@@ -397,9 +436,18 @@ class UsuarioViewSet(viewsets.GenericViewSet):
         detail=False,
         methods=["get"],
         url_path="buscar-usuario",
-        url_name="buscar-usuario"
+        url_name="buscar-usuario",
+        permission_classes=[IsAuthenticated]
     )
     def buscar_usuario(self, request):
+
+        """*** Somente super usuário. ***"""
+
+        if not request.user.super_user:
+            return Response(
+                {"error": "Apenas administradores podem desativar categorias."},
+                status=status.HTTP_403_FORBIDDEN
+            )
 
         nome_usuario = request.query_params.get('nome', None)
 
@@ -440,6 +488,36 @@ class UsuarioViewSet(viewsets.GenericViewSet):
 
             return Response(
                 serializer.data,
+                status=status.HTTP_201_CREATED
+            )
+
+        return Response(
+            serializer.errors, # Retorna o motivo exato da falha na validação
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+
+    @extend_schema(
+        request=EditarSenhaUsuarioSerializer,
+        responses={200: EditarSenhaUsuarioSerializer}
+    )
+    @action(
+        detail=True,
+        methods=["put"],
+        url_path="editar-senha",
+        url_name="editar-senha"
+    )
+    def editar_senha(self, request, pk=None):
+
+        instance = self.get_object()
+
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+
+        if serializer.is_valid():
+            serializer.save()
+
+            return Response(
+                {"detail": "Senha atualizada com sucesso!"},
                 status=status.HTTP_201_CREATED
             )
 
